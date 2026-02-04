@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nasdaq Investment Dashboard</title>
+<style>
+*{box-sizing:border-box;font-family:Arial,sans-serif;}
+body{
+  margin:0;
+  background:#f0f2f5;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  padding-top:20px;
+}
+.card{
+  background:#fff;
+  width:90%;
+  max-width:400px;
+  padding:25px;
+  border-radius:12px;
+  box-shadow:0 6px 18px rgba(0,0,0,.12);
+  text-align:center;
+  margin:20px 0;
+}
+input,select,button{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border-radius:6px;
+  border:1px solid #ccc;
+  font-size:15px;
+}
+button{
+  background:#2f7fb8;
+  color:#fff;
+  border:none;
+  cursor:pointer;
+  font-size:16px;
+  transition:0.2s;
+}
+button:hover{background:#256a98}
+.hidden{display:none;}
+.error{color:red;margin-top:10px;}
+.red{color:red;font-weight:bold;}
+.checkbox{text-align:left;margin-top:10px;}
+.loader{
+  width:40px;height:40px;
+  border:4px solid #ddd;
+  border-top:4px solid #2f7fb8;
+  border-radius:50%;
+  margin:15px auto;
+  animation:spin 1s linear infinite;
+}
+@keyframes spin{100%{transform:rotate(360deg)}}
+.passbox{position:relative;}
+.eye-icon{
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  cursor:pointer;
+  width:22px;
+  height:22px;
+}
+.profile-icon{
+  width:100px;
+  height:100px;
+  border-radius:50%;
+  background:#e6e6e6;
+  border:3px solid #2f7fb8;
+  margin:0 auto 15px auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.profile-icon svg{width:55px;height:55px;fill:#9e9e9e;}
+.profile-name{font-size:20px;font-weight:bold;margin:0;}
+.status-badge{display:inline-block;background:#e6f4ea;color:#2e7d32;padding:4px 10px;border-radius:20px;font-size:12px;margin-top:6px;}
+.last-login{font-size:12px;color:#777;margin-top:6px;}
+.balance-label{font-size:13px;color:#777;margin-top:15px;}
+.profit{font-size:20px;font-weight:bold;color:#2f7fb8;margin-bottom:10px;}
+.notice{font-size:12px;color:#666;margin-bottom:15px;}
+.footer{margin-top:auto;width:100%;text-align:center;font-size:11px;color:#888;padding:12px 0;border-top:1px solid #ddd;}
+.back-btn{font-size:14px;padding:4px 8px;margin-bottom:10px;cursor:pointer;background:#ccc;color:#333;border-radius:6px;border:none;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="card" id="loginBox">
+  <h2>Login</h2>
+  <input id="loginEmail" placeholder="Email">
+  <div class="passbox">
+    <input id="loginPass" type="password" placeholder="Password" style="padding-right:40px;">
+    <span class="eye-icon" onclick="togglePassword()">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#666">
+        <path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/>
+        <circle cx="12" cy="12" r="2.5"/>
+      </svg>
+    </span>
+  </div>
+  <button onclick="login()">Login</button>
+  <div id="loginErr" class="error hidden">Incorrect login details</div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="card hidden" id="welcomeBox">
+  <div class="profile-icon">
+    <svg viewBox="0 0 24 24">
+      <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+    </svg>
+  </div>
+  <div class="profile-name" id="welcomeText">EDIVALDO CORDEIRO</div>
+  <div class="status-badge">Verified</div>
+  <div class="last-login" id="lastLogin"></div>
+  <div class="balance-label">Available Balance</div>
+  <div class="profit">$<span id="profitValue">27,775.00</span></div>
+  <div class="notice">You can only withdraw up to your available balance.</div>
+
+  <button onclick="toggleDetails()" style="margin-top:10px;">View My Details ▼</button>
+  <div id="accountDetails" class="hidden" style="text-align:left;margin-top:10px;font-size:14px;">
+    <p><b>Full Name:</b> EDIVALDO CORDEIRO</p>
+    <p><b>Localização:</b> São Gabriel da Cachoeira -AM</p>
+    <p><b>Email:</b> edicord41@gmail.com</p>
+    <p><b>Tel:</b> (97)991089348</p>
+    <p><b>Chave Pix:</b> 57096591220</p>
+  </div>
+
+  <button onclick="showPage('methodBox')">Start Your Withdrawal</button>
+</div>
+
+<!-- METHOD -->
+<div class="card hidden" id="methodBox">
+  <button class="back-btn" onclick="back()">← Back</button>
+  <h2>Select Withdrawal Method</h2>
+  <select id="method">
+    <option value="">-- Choose --</option>
+    <option value="bank">Bank Withdrawal</option>
+    <option value="wallet">Wallet Withdrawal</option>
+  </select>
+  <button onclick="openMethod()">Continue</button>
+</div>
+
+<!-- BANK -->
+<div class="card hidden" id="bankBox">
+  <button class="back-btn" onclick="back()">← Back</button>
+  <h2>Bank Withdrawal</h2>
+  <input placeholder="Full Name" id="bankName">
+  <input placeholder="E-mail" id="bankEmail">
+  <input placeholder="Country" id="bankCountry">
+  <input placeholder="Bank Name" id="bankBank">
+  <input placeholder="PIX Key" id="bankPIX">
+  <input id="bankAmount" type="text" placeholder="Value in BRL" oninput="formatInputLive(this,'R$')" onblur="formatInputFinal(this,'R$')">
+  <div class="checkbox"><input type="checkbox" id="bankCheck"> I confirm details are correct</div>
+  <button onclick="bankSubmit()">Continue</button>
+  <div id="bankErr" class="error hidden"></div>
+</div>
+
+<!-- WALLET -->
+<div class="card hidden" id="walletBox">
+  <button class="back-btn" onclick="back()">← Back</button>
+  <h2>Wallet Withdrawal</h2>
+  <input placeholder="Email" id="walletEmail">
+  <input placeholder="Wallet Address" id="walletAddr">
+  <select id="walletNetwork">
+    <option value="USDT">USDT</option>
+    <option value="ETH">Ethereum</option>
+    <option value="BNB">BNB</option>
+  </select>
+  <input id="walletAmount" type="text" placeholder="Value in $ USDT" oninput="formatInputLive(this,'$')" onblur="formatInputFinal(this,'$')">
+  <div class="checkbox"><input type="checkbox" id="walletCheck"> I confirm details are correct</div>
+  <button onclick="walletSubmit()">Continue</button>
+  <div id="walletErr" class="error hidden"></div>
+</div>
+
+<!-- KYC -->
+<div class="card hidden" id="kycBox">
+  <button class="back-btn" onclick="back()">← Back</button>
+  <h2>KYC Verification</h2>
+  <input id="kycInput" placeholder="Enter KYC Code">
+  <button onclick="verifyKYC()">Verify</button>
+  <div id="kycErr" class="error hidden">Invalid KYC code</div>
+</div>
+
+<!-- PROCESS -->
+<div class="card hidden" id="processBox">
+  <h2>Processing Withdrawal</h2>
+  <div class="loader"></div>
+  <p id="processText"></p>
+  <p id="processMsg"></p>
+  <p id="transactionID"></p>
+  <p><b>Date / Time:</b><br><span id="dateTime"></span></p>
+  <p class="red">Time remaining: <span id="timer">01:00</span></p>
+</div>
+
+<!-- PENDING -->
+<div class="card hidden" id="pendingBox">
+  <h2>Withdrawal Pending</h2>
+  <p id="transactionID2"></p>
+  <p><b>Date / Time:</b><br><span id="dateTime2"></span></p>
+  <p class="red" id="pendingText"></p>
+</div>
+
+<div class="footer">© 2026 Nasdaq Investment · All transactions are secured & encrypted</div>
+
+<script>
+let amountText="", trxID="", profit=27775;
+let pageStack = [];
+function el(id){return document.getElementById(id);}
+function togglePassword(){el("loginPass").type=el("loginPass").type==="password"?"text":"password";}
+function toggleDetails(){el("accountDetails").classList.toggle("hidden");}
+
+// LOGIN
+function login(){
+ const email=el("loginEmail").value;
+ const pass=el("loginPass").value;
+ if(email==="edicord41@gmail.com" && pass==="NASDAQ22"){
+   el("loginBox").classList.add("hidden");
+   showPage('welcomeBox');
+   el("lastLogin").innerText="Last login: "+new Date().toLocaleString();
+   setTimeout(startProfitCounter,3000);
+ } else el("loginErr").classList.remove("hidden");
+}
+
+// PAGE NAVIGATION
+function showPage(pageId){
+  ["welcomeBox","methodBox","bankBox","walletBox","kycBox","processBox","pendingBox"].forEach(id=>el(id).classList.add("hidden"));
+  el(pageId).classList.remove("hidden");
+  pageStack.push(pageId);
+}
+
+function back(){
+  if(pageStack.length>1){
+    pageStack.pop(); // current page
+    const prev = pageStack[pageStack.length-1];
+    el(prev).classList.remove("hidden");
+  }
+}
+
+// METHOD
+function proceedToMethod(){showPage('methodBox');}
+function openMethod(){
+  const m=el("method").value;
+  if(!m)return;
+  showPage(m+'Box');
+}
+
+// FORMATTING
+function formatInputLive(i,s){let v=i.value.replace(/[^\d]/g,'');i.value=v?s+' '+v:'';}
+function formatInputFinal(i,s){let v=i.value.replace(/[^\d]/g,'');if(!v)return;i.value=s+' '+Number(v).toLocaleString('en-US',{minimumFractionDigits:2});}
+
+// BANK
+function bankSubmit(){
+  let name=el("bankName").value,email=el("bankEmail").value,country=el("bankCountry").value,bank=el("bankBank").value,pix=el("bankPIX").value,amtText=el("bankAmount").value.replace(/[^\d]/g,''),amt=parseFloat(amtText)/100;
+  if(!name||!email||!country||!bank||!pix||!el("bankCheck").checked||!amtText){
+    el("bankErr").innerText="Make sure you fill everything";
+    el("bankErr").classList.remove("hidden");return;
+  }
+  if(amt>profit){el("bankErr").innerText="Amount exceeds withdrawal limit";el("bankErr").classList.remove("hidden");return;}
+  amountText=el("bankAmount").value;
+  el("bankErr").classList.add("hidden");
+  goKYC();
+}
+
+// WALLET
+function walletSubmit(){
+  let email=el("walletEmail").value,addr=el("walletAddr").value,amtText=el("walletAmount").value.replace(/[^\d]/g,''),amt=parseFloat(amtText)/100;
+  if(!email||!addr||!el("walletCheck").checked||!amtText){el("walletErr").innerText="Make sure you fill everything";el("walletErr").classList.remove("hidden");return;}
+  if(amt>profit){el("walletErr").innerText="Amount exceeds withdrawal limit";el("walletErr").classList.remove("hidden");return;}
+  amountText=el("walletAmount").value;
+  el("walletErr").classList.add("hidden");
+  goKYC();
+}
+
+function goKYC(){showPage('kycBox');}
+
+// KYC
+function verifyKYC(){if(el("kycInput").value!=="539494"){el("kycErr").classList.remove("hidden");return;}startProcess();}
+
+// PROCESS
+function startProcess(){
+ el("kycBox").classList.add("hidden");
+ showPage('processBox');
+ trxID="TRX-"+Date.now();
+ let requestTime=new Date().toLocaleString();
+ el("dateTime").innerText=requestTime;
+ el("transactionID").innerText="Transaction ID: "+trxID;
+ el("processText").innerText="Your withdrawal of "+amountText+" is being processed.";
+ let msgs=["Connecting to payment gateway...","Checking withdrawal details...","Verifying account security..."];
+ let idx=0;
+ const rot=setInterval(()=>{el("processMsg").innerText=msgs[idx++%msgs.length];},2000);
+ let t=60;
+ const timer=setInterval(()=>{
+   t--;
+   el("timer").innerText="00:"+(t<10?"0"+t:t);
+   if(t<=0){
+     clearInterval(timer);
+     clearInterval(rot);
+     setTimeout(()=>{
+       el("processBox").classList.add("hidden");
+       showPage('pendingBox');
+       el("dateTime2").innerText=requestTime;
+       el("transactionID2").innerText="Transaction ID: "+trxID;
+       el("pendingText").innerHTML="Your withdrawal of <b>"+amountText+"</b> is pending due to incomplete verification.<br><br>Please message your company for withdrawal approval.";
+     },1000);
+   }
+ },1000);
+}
+
+// PROFIT
+function startProfitCounter(){
+  const profitEl=el("profitValue");
+  setInterval(()=>{
+    let increment=(Math.random()*0.5).toFixed(2);
+    profit+=parseFloat(increment);
+    profitEl.innerText=profit.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  },3000);
+}
+</script>
+</body>
+</html>
